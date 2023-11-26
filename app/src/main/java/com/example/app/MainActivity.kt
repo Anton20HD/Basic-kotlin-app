@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +18,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BadgedBox
@@ -54,6 +59,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
@@ -61,12 +68,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.app.composables.AccountScreen
+import com.example.app.composables.FavoriteScreen
 import com.example.app.ui.theme.AppTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.format.TextStyle
 
 class MainActivity : ComponentActivity() {
+
+
+
+
+   private val viewModel = SampleViewModel()
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "SuspiciousIndentation")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,7 +88,7 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             val navController = rememberNavController()
-            val scope = rememberCoroutineScope()
+           // val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
 
             Scaffold(
@@ -90,11 +104,11 @@ class MainActivity : ComponentActivity() {
 
                             ),
                             BottomNavItem(
-                                name = "Chat", route = "chat", icon = Icons.Default.Notifications
+                                name = "Favorite", route = "favorite", icon = Icons.Default.Favorite
 
                             ),
                             BottomNavItem(
-                                name = "Settings", route = "settings", icon = Icons.Default.Settings
+                                name = "Account", route = "account", icon = Icons.Default.AccountCircle
 
                             ),
 
@@ -110,6 +124,8 @@ class MainActivity : ComponentActivity() {
 
                 content = {
 
+
+
                     NavHost(navController = navController, startDestination = "home" ) {
 
 
@@ -120,16 +136,17 @@ class MainActivity : ComponentActivity() {
                                 description = "Rashguard",
                                 title = "Black Rashguard",
                                 snackbarHostState = snackbarHostState,
+                                viewModel = viewModel
                                 )
                         }
-                        composable("chat")  {
+                        composable("favorite")  {
 
-                            ChatScreen()
+                            FavoriteScreen()
 
                         }
-                        composable("settings")  {
+                        composable("account")  {
 
-                            SettingsScreen()
+                            AccountScreen()
                         }
 
                     }
@@ -257,10 +274,14 @@ fun HomeScreen(
     description: String,
     title: String,
     snackbarHostState: SnackbarHostState,
+    viewModel: SampleViewModel
 
 ) {
     val scope = rememberCoroutineScope()
-    val painter = painterResource(id = R.drawable.black_rashguard)
+    //val painter = painterResource(id = R.drawable.black_rashguard)
+
+
+
     CartSection()
     Column(
         modifier = Modifier
@@ -270,7 +291,7 @@ fun HomeScreen(
 
 
         ImageCard(
-            painter = painter,
+            currentImageId = viewModel.currentImageId,
             contentDescription = description,
             title = title,
             modifier = Modifier.padding(top = 70.dp),
@@ -281,6 +302,11 @@ fun HomeScreen(
                         actionLabel = "Undo"
                     )
                 }
+            },
+            onChangeImageClicked = {
+
+
+                viewModel.changeImage()
             }
         )
 
@@ -305,36 +331,19 @@ fun HomeScreen(
 }
 
 
-@Composable
-fun ChatScreen () {
-    Box(modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
 
-
-    ) {
-
-    }
-}@Composable
-fun SettingsScreen () {
-    Box(modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-
-
-    ) {
-
-
-    }
-}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageCard(
-    painter: Painter,
+
+    currentImageId: Int,
     contentDescription: String,
     title: String,
     modifier: Modifier = Modifier,
-    onAddToCartClicked: () ->  Unit
+    onAddToCartClicked: () ->  Unit,
+    onChangeImageClicked: () -> Unit
 ) {
 
 
@@ -349,7 +358,7 @@ fun ImageCard(
 
         ) {
             Image(
-                painter = painter,
+                painter = painterResource(id = currentImageId),
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -393,7 +402,15 @@ fun ImageCard(
             }
 
         }
+        Button(onClick = onChangeImageClicked,
+            colors = ButtonDefaults.buttonColors(Color.Black),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
 
+        ) {
+            Text(text = "Change color")
+        }
 
         Button(
             onClick = {
@@ -411,8 +428,10 @@ fun ImageCard(
         ) {
             Text(text = "Add to cart")
         }
+        
 
-        Spacer(modifier = Modifier.height(16.dp))
+
+       // Spacer(modifier = Modifier.height(16.dp))
 
     }
 
